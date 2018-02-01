@@ -3,30 +3,35 @@ import blescan
 import sys
 import bluetooth._bluetooth as bluez
 import json
-#import time
-#import logging
 import requests
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib import style
+from numpy import *
 
-style.use('fivethirtyeight')
+list_x = []
+list_y = []
 
+plt.ion()
 fig = plt.figure()
-ax1 = fig.add_subplot(1,1,1)
+sf = fig.add_subplot(111)
+plt.xlim([0,60])
+plt.ylim([0,5555])
+plt.yticks([0,1111,2222,3333,4444])
+line1, = sf.plot(list_x,list_y,'o-')
+i=0
 
 dev_id = 0
+
 #logging.basicConfig(filename='./log/test.log',level=logging.DEBUG)
 try:
 	sock = bluez.hci_open_dev(dev_id)
-	print ("ble thread started")
+	print ("start")
 
 except:
 	print ("error accessing bluetooth device...")
     	sys.exit(1)
-
-fig = plt.figure()
-ax1 = fig.add_subplot(1,1,1)
 
 blescan.hci_le_set_scan_parameters(sock)
 blescan.hci_enable_le_scan(sock)
@@ -69,15 +74,21 @@ while True:
         dict_data = {'time':int(float(gps_data_buffer[0])) + 90000,'lat':gps_data_buffer[1], 'long':gps_data_buffer[3], 'settle':gps_data_buffer[6], 'b_id':beacon_data_buffer[0], 'rssi':beacon_data_buffer[1]}
         json_data = json.dumps(dict_data)
         
+        #print(json_data)
         
-        ys.append(beacon_data_buffer[0])
-        i = i+1
-        xs.append(i)
-        ax1.plot(xs,ys)
-        #print(json_data)        
+        list_x.append(i)
+	i+=1
+	list_y.append(beacon_data_buffer[1])
+	line1.set_xdata(list_x)
+	line1.set_ydata(list_y)
+	
+	plt.title('Beacon Location')
+	plt.xlabel('Time')
+	plt.ylabel('Location')
+	plt.draw(), plt.pause(0.00001)
+        
         #requests.put('https://sun-serv-demo.herokuapp.com/user/',data = json_data)
         #requests.post('http://192.168.100.24:3000/user',data = dict_data)
         
-
         #logging.info(json_data)
         
